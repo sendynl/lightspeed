@@ -1,9 +1,6 @@
 <?php
 
-
-
 namespace Lightspeed;
-
 
 class WebshopappApiResourceReturns
 {
@@ -15,19 +12,6 @@ class WebshopappApiResourceReturns
     public function __construct(WebshopappApiClient $client)
     {
         $this->client = $client;
-    }
-
-    /**
-     * @param array $fields
-     *
-     * @return array
-     * @throws WebshopappApiException
-     */
-    public function create($fields)
-    {
-        $fields = array('returns' => $fields);
-
-        return $this->client->create('returns', $fields);
     }
 
     /**

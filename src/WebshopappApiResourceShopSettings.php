@@ -2,7 +2,7 @@
 
 namespace Lightspeed;
 
-class WebshopappApiResourceCheckoutsShipment_methods
+class WebshopappApiResourceShopSettings
 {
     /**
      * @var WebshopappApiClient
@@ -15,13 +15,11 @@ class WebshopappApiResourceCheckoutsShipment_methods
     }
 
     /**
-     * @param int $checkoutId
-     *
      * @return array
      * @throws WebshopappApiException
      */
-    public function get($checkoutId)
+    public function get()
     {
-        return $this->client->read('checkouts/' . $checkoutId . '/shipment_methods');
+        return $this->client->read('shop/settings');
     }
 }

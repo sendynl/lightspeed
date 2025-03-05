@@ -1,9 +1,6 @@
 <?php
 
-
-
 namespace Lightspeed;
-
 
 class WebshopappApiResourceQuotesPaymentmethods
 {
@@ -34,7 +31,7 @@ class WebshopappApiResourceQuotesPaymentmethods
      * @return int
      * @throws WebshopappApiException
      */
-    public function count($quoteId, $params = array())
+    public function count($params = array())
     {
         return $this->client->read('quotes/' . $quoteId . '/paymentmethods/count', $params);
     }
