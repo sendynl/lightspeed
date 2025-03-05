@@ -1,9 +1,6 @@
 <?php
 
-
-
 namespace Lightspeed;
-
 
 class WebshopappApiResourceCategoriesImage
 {
@@ -26,6 +23,25 @@ class WebshopappApiResourceCategoriesImage
      */
     public function create($categoryId, $fields)
     {
+        if (strpos($fields['attachment'], 'http') === false) {
+            try {
+                $attachment = $fields['attachment'];
+
+                new SplFileObject($attachment);
+
+                $mimetype             = mime_content_type($attachment);
+                $fields['attachment'] = new CURLFile($attachment, $mimetype);
+
+                $options = [
+                    'header' => 'multipart/form-data'
+                ];
+
+                return $this->client->create('categories/' . $categoryId . '/image', $fields, $options);
+            } catch (RuntimeException $exception) {
+                //
+            }
+        }
+
         $fields = array('categoryImage' => $fields);
 
         return $this->client->create('categories/' . $categoryId . '/image', $fields);

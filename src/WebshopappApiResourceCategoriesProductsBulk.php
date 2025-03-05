@@ -2,7 +2,7 @@
 
 namespace Lightspeed;
 
-class WebshopappApiResourceCheckoutsShipment_methods
+class WebshopappApiResourceCategoriesProductsBulk
 {
     /**
      * @var WebshopappApiClient
@@ -15,13 +15,15 @@ class WebshopappApiResourceCheckoutsShipment_methods
     }
 
     /**
-     * @param int $checkoutId
+     * @param array $fields
      *
      * @return array
      * @throws WebshopappApiException
      */
-    public function get($checkoutId)
+    public function create($fields)
     {
-        return $this->client->read('checkouts/' . $checkoutId . '/shipment_methods');
+        $fields = array('categoriesProduct' => $fields);
+
+        return $this->client->create('categories/products/bulk', $fields);
     }
 }

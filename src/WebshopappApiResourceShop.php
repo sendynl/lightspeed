@@ -1,9 +1,6 @@
 <?php
 
-
-
 namespace Lightspeed;
-
 
 class WebshopappApiResourceShop
 {
@@ -24,5 +21,18 @@ class WebshopappApiResourceShop
     public function get()
     {
         return $this->client->read('shop');
+    }
+
+    /**
+     * @param array $fields
+     *
+     * @return array
+     * @throws WebshopappApiException
+     */
+    public function update($fields)
+    {
+        $fields = array('shop' => $fields);
+
+        return $this->client->update('shop', $fields);
     }
 }

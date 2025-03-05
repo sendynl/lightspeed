@@ -2,20 +2,16 @@
 
 namespace Lightspeed;
 
-/**
- * The Webshopapp Api Client Class
- */
 class WebshopappApiClient
 {
     /**
      * The Api Client version (do not change!)
      */
-    const CLIENT_VERSION = '1.8.0';
+    const CLIENT_VERSION = '1.9.1';
     /**
      * The Api Hosts (do not change!)
      */
     const SERVER_HOST_LOCAL = 'https://api.webshopapp.dev/';
-    const SERVER_HOST_TEST  = 'https://api.webshopapp.net/';
     const SERVER_HOST_LIVE  = 'https://api.webshopapp.com/';
     const SERVER_EU1_LIVE   = 'https://api.webshopapp.com/';
     const SERVER_US1_LIVE   = 'https://api.shoplightspeed.com/';
@@ -40,6 +36,10 @@ class WebshopappApiClient
      * @var int
      */
     private $apiCallsMade = 0;
+    /**
+     * @var array
+     */
+    private $responseHeaders = [];
 
     /**
      * @var WebshopappApiResourceAccount
@@ -113,6 +113,10 @@ class WebshopappApiClient
      * @var WebshopappApiResourceCategoriesProducts
      */
     public $categoriesProducts;
+    /**
+     * @var WebshopappApiResourceCategoriesProductsBulk
+     */
+    public $categoriesProductsBulk;
     /**
      * @var WebshopappApiResourceCheckouts
      */
@@ -221,6 +225,10 @@ class WebshopappApiClient
      * @var WebshopappApiResourceLanguages
      */
     public $languages;
+    /**
+     * @var WebshopappApiResourceLocations
+     */
+    public $locations;
     /**
      * @var WebshopappApiResourceMetafields
      */
@@ -362,6 +370,10 @@ class WebshopappApiClient
      */
     public $shopScripts;
     /**
+     * @var WebshopappApiResourceShopSettings
+     */
+    public $shopSettings;
+    /**
      * @var WebshopappApiResourceShopTracking
      */
     public $shopTracking;
@@ -429,6 +441,10 @@ class WebshopappApiClient
      * @var WebshopappApiResourceVariants
      */
     public $variants;
+    /**
+     * @var WebshopappApiResourceVariantsImage
+     */
+    public $variantsImage;
     /**
      * @var WebshopappApiResourceVariantsMetafields
      */
@@ -546,6 +562,24 @@ class WebshopappApiClient
     }
 
     /**
+     * @param array $responseHeaders
+     *
+     * @return void
+     */
+    public function setResponseHeaders($responseHeaders)
+    {
+        $this->responseHeaders = $responseHeaders;
+    }
+
+    /**
+     * @return array
+     */
+    public function getResponseHeaders()
+    {
+        return $this->responseHeaders;
+    }
+
+    /**
      * @throws WebshopappApiException
      */
     private function checkLoginCredentials()
@@ -580,6 +614,7 @@ class WebshopappApiClient
         $this->categories                = new WebshopappApiResourceCategories($this);
         $this->categoriesImage           = new WebshopappApiResourceCategoriesImage($this);
         $this->categoriesProducts        = new WebshopappApiResourceCategoriesProducts($this);
+        $this->categoriesProductsBulk    = new WebshopappApiResourceCategoriesProductsBulk($this);
         $this->checkouts                 = new WebshopappApiResourceCheckouts($this);
         $this->checkoutsOrder            = new WebshopappApiResourceCheckoutsOrder($this);
         $this->checkoutsPayment_methods  = new WebshopappApiResourceCheckoutsPayment_methods($this);
@@ -607,6 +642,7 @@ class WebshopappApiClient
         $this->invoicesItems             = new WebshopappApiResourceInvoicesItems($this);
         $this->invoicesMetafields        = new WebshopappApiResourceInvoicesMetafields($this);
         $this->languages                 = new WebshopappApiResourceLanguages($this);
+        $this->locations                 = new WebshopappApiResourceLocations($this);
         $this->metafields                = new WebshopappApiResourceMetafields($this);
         $this->orders                    = new WebshopappApiResourceOrders($this);
         $this->ordersCredit              = new WebshopappApiResourceOrdersCredit($this);
@@ -642,6 +678,7 @@ class WebshopappApiClient
         $this->shopLimits                = new WebshopappApiResourceShopLimits($this);
         $this->shopMetafields            = new WebshopappApiResourceShopMetafields($this);
         $this->shopScripts               = new WebshopappApiResourceShopScripts($this);
+        $this->shopSettings              = new WebshopappApiResourceShopSettings($this);
         $this->shopTracking              = new WebshopappApiResourceShopTracking($this);
         $this->shopWebsite               = new WebshopappApiResourceShopWebsite($this);
         $this->subscriptions             = new WebshopappApiResourceSubscriptions($this);
@@ -659,6 +696,7 @@ class WebshopappApiClient
         $this->types                     = new WebshopappApiResourceTypes($this);
         $this->typesAttributes           = new WebshopappApiResourceTypesAttributes($this);
         $this->variants                  = new WebshopappApiResourceVariants($this);
+        $this->variantsImage             = new WebshopappApiResourceVariantsImage($this);
         $this->variantsMetafields        = new WebshopappApiResourceVariantsMetafields($this);
         $this->variantsBulk              = new WebshopappApiResourceVariantsBulk($this);
         $this->variantsMovements         = new WebshopappApiResourceVariantsMovements($this);
@@ -688,10 +726,6 @@ class WebshopappApiClient
         elseif ($this->apiServer == 'us1')
         {
             $apiHost = self::SERVER_US1_LIVE;
-        }
-        else
-        {
-            $apiHost = self::SERVER_HOST_TEST;
         }
 
         $apiHostParts     = parse_url($apiHost);
@@ -741,7 +775,7 @@ class WebshopappApiClient
      * @return mixed The decoded response object
      * @throws WebshopappApiException
      */
-    private function sendRequest($url, $method, $payload = null)
+    private function sendRequest($url, $method, $payload = null, $options = [])
     {
         $this->checkLoginCredentials();
 
@@ -749,14 +783,19 @@ class WebshopappApiClient
         {
             if (!$payload || !is_array($payload))
             {
-                throw new WebshopAppApiException('Invalid payload', 100);
+                throw new WebshopAppApiException(100, 'Invalid payload');
             }
+
+            $multipart = array_key_exists('header', $options);
+
+            $header = $multipart ? $options['header'] : 'application/json';
 
             $curlOptions = array(
                 CURLOPT_URL           => $this->getUrl($url),
                 CURLOPT_CUSTOMREQUEST => strtoupper($method),
-                CURLOPT_HTTPHEADER    => array('Content-Type: application/json'),
-                CURLOPT_POSTFIELDS    => json_encode($payload),
+                CURLOPT_HTTPHEADER    => array('Content-Type: ' . $header),
+                CURLOPT_POST          => true,
+                CURLOPT_POSTFIELDS    => $multipart ? $payload : json_encode($payload),
             );
         }
         elseif ($method == 'delete')
@@ -785,7 +824,27 @@ class WebshopappApiClient
 
         curl_setopt_array($curlHandle, $curlOptions);
 
+        $headers = [];
+
+        curl_setopt($curlHandle, CURLOPT_HEADERFUNCTION, function($curl, $header) use (&$headers) {
+            $length = strlen($header);
+            $header = explode(':', $header, 2);
+
+            if (count($header) <= 1) {
+                return $length;
+            }
+
+            $header              = array_map('trim', $header);
+            $headers[$header[0]] = $header[1];
+
+            return $length;
+        });
+
         $responseBody = curl_exec($curlHandle);
+
+        if ($headers) {
+            $this->setResponseHeaders($headers);
+        }
 
         if (curl_errno($curlHandle))
         {
@@ -845,13 +904,14 @@ class WebshopappApiClient
     /**
      * @param string $url
      * @param array  $payload
+     * @param array  $options
      *
      * @return array
      * @throws WebshopappApiException
      */
-    public function create($url, $payload)
+    public function create($url, $payload, $options = [])
     {
-        return $this->sendRequest($url, 'post', $payload);
+        return $this->sendRequest($url, 'post', $payload, $options);
     }
 
     /**
@@ -869,13 +929,14 @@ class WebshopappApiClient
     /**
      * @param string $url
      * @param array  $payload
+     * @param array  $options
      *
      * @return array
      * @throws WebshopappApiException
      */
-    public function update($url, $payload)
+    public function update($url, $payload, $options = [])
     {
-        return $this->sendRequest($url, 'put', $payload);
+        return $this->sendRequest($url, 'put', $payload, $options);
     }
 
     /**

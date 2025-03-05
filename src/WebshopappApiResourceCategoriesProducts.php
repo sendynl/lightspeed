@@ -1,7 +1,5 @@
 <?php
 
-
-
 namespace Lightspeed;
 
 class WebshopappApiResourceCategoriesProducts

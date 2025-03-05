@@ -1,9 +1,6 @@
 <?php
 
-
-
 namespace Lightspeed;
-
 
 class WebshopappApiResourceShipmentsProducts
 {

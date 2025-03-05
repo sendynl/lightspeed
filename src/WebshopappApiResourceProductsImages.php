@@ -1,9 +1,6 @@
 <?php
 
-
-
 namespace Lightspeed;
-
 
 class WebshopappApiResourceProductsImages
 {
@@ -26,6 +23,25 @@ class WebshopappApiResourceProductsImages
      */
     public function create($productId, $fields)
     {
+        if (strpos($fields['attachment'], 'http') === false) {
+            try {
+                $attachment = $fields['attachment'];
+
+                new SplFileObject($attachment);
+
+                $mimetype             = mime_content_type($attachment);
+                $fields['attachment'] = new CURLFile($attachment, $mimetype);
+
+                $options = [
+                    'header' => 'multipart/form-data'
+                ];
+
+                return $this->client->create('products/' . $productId . '/images', $fields, $options);
+            } catch (RuntimeException $exception) {
+                //
+            }
+        }
+
         $fields = array('productImage' => $fields);
 
         return $this->client->create('products/' . $productId . '/images', $fields);

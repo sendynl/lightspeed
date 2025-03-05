@@ -1,9 +1,6 @@
 <?php
 
-
-
 namespace Lightspeed;
-
 
 class WebshopappApiResourceFiles
 {
@@ -25,6 +22,25 @@ class WebshopappApiResourceFiles
      */
     public function create($fields)
     {
+        if (strpos($fields['attachment'], 'http') === false) {
+            try {
+                $attachment = $fields['attachment'];
+
+                new SplFileObject($attachment);
+
+                $mimetype             = mime_content_type($attachment);
+                $fields['attachment'] = new CURLFile($attachment, $mimetype);
+
+                $options = [
+                    'header' => 'multipart/form-data'
+                ];
+
+                return $this->client->create('files', $fields, $options);
+            } catch (RuntimeException $exception) {
+                //
+            }
+        }
+
         $fields = array('file' => $fields);
 
         return $this->client->create('files', $fields);
